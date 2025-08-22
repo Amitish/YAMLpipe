@@ -35,5 +35,5 @@ steps:
     provider: 'azurerm'
     command: 'apply'
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
-    commandOptions: '--auto-aprove'
+    commandOptions: '--auto-approve'
     environmentServiceNameAzureRM: 'servocon'
