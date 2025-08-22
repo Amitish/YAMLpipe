@@ -14,6 +14,7 @@ steps:
     terraformVersion: 'latest'
 
 - task: TerraformTask@5
+  displayName: 'Terraform Init' 
   inputs:
     provider: 'azurerm'
     command: 'init'
@@ -24,6 +25,7 @@ steps:
     backendAzureRmKey: '22Aug.tfstate'
 
 - task: TerraformTask@5
+  displayName: 'Terraform Plan' 
   inputs:
     provider: 'azurerm'
     command: 'plan'
@@ -31,6 +33,7 @@ steps:
     environmentServiceNameAzureRM: 'servocon'
 
 - task: TerraformTask@5
+  displayName: 'Terraform Apply' 
   inputs:
     provider: 'azurerm'
     command: 'apply'
