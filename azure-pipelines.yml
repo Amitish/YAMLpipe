@@ -3,6 +3,8 @@ trigger:
     include:
       - main
       - feature/*
+    
+pr: none
 
 pool: agent-ka-pool
 
