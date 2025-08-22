@@ -1,4 +1,10 @@
-trigger: none
+trigger:
+  branches:
+    include:
+      - main
+      - feature/*
+    
+pr: none
 
 pool: agent-ka-pool
 
@@ -15,11 +21,19 @@ steps:
     backendServiceArm: 'servocon'
     backendAzureRmStorageAccountName: 'strgaccyaml'
     backendAzureRmContainerName: 'cntryaml'
-    backendAzureRmKey: '22.tfstate'
+    backendAzureRmKey: '22Aug.tfstate'
 
 - task: TerraformTask@5
   inputs:
     provider: 'azurerm'
     command: 'plan'
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+    environmentServiceNameAzureRM: 'servocon'
+
+- task: TerraformTask@5
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+    commandOptions: '--auto-approve'
     environmentServiceNameAzureRM: 'servocon'
