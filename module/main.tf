@@ -1,11 +1,5 @@
-module "tinku" {
+module "tinku1" {
 source = "../infra"
-res_grp = "jiya"
-res_loc = "CentralIndia"
-}
-
-module "poki" {
-source = "../infra"
-res_grp = "mon"
+res_grp = "jiya1"
 res_loc = "CentralIndia"
 }
