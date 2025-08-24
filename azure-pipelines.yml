@@ -14,6 +14,7 @@ steps:
     terraformVersion: 'latest'
 
 - task: TerraformTask@5
+  displayName: 'Init'
   inputs:
     provider: 'azurerm'
     command: 'init'
@@ -24,6 +25,7 @@ steps:
     backendAzureRmKey: '24.tfstate'
 
 - task: TerraformTask@5
+  displayName: 'plan'
   inputs:
     provider: 'azurerm'
     command: 'plan'
@@ -32,6 +34,7 @@ steps:
 
 # ✅ Apply will only run if the branch is main (i.e., PR is merged)
 - task: TerraformTask@5
+  displayName: 'apply'
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
   inputs:
     provider: 'azurerm'
