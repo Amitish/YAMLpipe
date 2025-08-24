@@ -15,7 +15,7 @@ steps:
     backendServiceArm: 'servocon'
     backendAzureRmStorageAccountName: 'strgaccyaml'
     backendAzureRmContainerName: 'cntryaml'
-    backendAzureRmKey: '22.tfstate'
+    backendAzureRmKey: '24.tfstate'
 
 - task: TerraformTask@5
   inputs:
