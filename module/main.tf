@@ -1,5 +1,5 @@
 module "tinku1" {
 source = "../infra"
-res_grp = "jiya1"
+res_grp = "PagalGuy"
 res_loc = "CentralIndia"
 }
