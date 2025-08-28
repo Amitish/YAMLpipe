@@ -2,7 +2,7 @@ trigger:
   branches:
     include:
       - main         # merge ke baad chalega (apply bhi hoga)
-      - feature/* 
+      - feature/*    # feature branches pe bhi chalega (sirf plan tak)
 
 pool: agent-ka-pool
 
@@ -29,6 +29,12 @@ steps:
     command: 'plan'
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
+
+# 🔒 Security Check with Checkov
+- script: |
+    pip install checkov
+    checkov -d $(System.DefaultWorkingDirectory)/module --quiet --compact
+  displayName: 'Run Security Scan (Checkov)'
 
 - task: TerraformTask@5
   displayName: "Terraform Apply (only after merge to main)"
