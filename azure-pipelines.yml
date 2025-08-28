@@ -4,7 +4,7 @@ trigger:
       - main
       - feature/*
 
-pool: agent-ka-pool   # Tumhara Windows agent
+pool: agent-ka-pool  # tumhara Windows agent
 
 steps:
 - task: TerraformInstaller@1
@@ -30,16 +30,15 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
 
-# ✅ Use pre-installed Python (no manual installer needed)
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.x'
-    addToPath: true
-  displayName: 'Set up Python'
-
-# 🔒 Run Checkov security scan
-- script: |
+# ✅ Install Python + Checkov manually
+- powershell: |
+    Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe -OutFile python-installer.exe
+    Start-Process python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_pip=1' -Wait
+    python --version
     pip install checkov
+  displayName: 'Install Python & Checkov (Windows)'
+
+- script: |
     checkov -d $(System.DefaultWorkingDirectory)/module --quiet --compact
   displayName: 'Run Security Scan (Checkov)'
 
