@@ -30,17 +30,20 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
 
-# ---------------- tfsec steps ----------------
+
+# ---------------- Trivy steps ----------------
 - powershell: |
-    Write-Host "Downloading tfsec binary..."
-    Invoke-WebRequest -Uri https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-windows-amd64.exe -OutFile $(Build.SourcesDirectory)\tfsec.exe
-  displayName: 'Download tfsec'
+    Write-Host "Downloading Trivy binary..."
+    Invoke-WebRequest -Uri https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.54.0_Windows-64bit.zip -OutFile $(Build.SourcesDirectory)\trivy.zip
+    Expand-Archive -Path $(Build.SourcesDirectory)\trivy.zip -DestinationPath $(Build.SourcesDirectory)\trivy
+  displayName: 'Download Trivy'
 
 - powershell: |
-    Write-Host "Running tfsec scan..."
-    $(Build.SourcesDirectory)\tfsec.exe $(System.DefaultWorkingDirectory)/module
-  displayName: 'Run Security Scan (tfsec)'
+    Write-Host "Running Trivy IaC scan..."
+    $(Build.SourcesDirectory)\trivy\trivy.exe config --severity HIGH,CRITICAL $(System.DefaultWorkingDirectory)/module
+  displayName: 'Run Security Scan (Trivy IaC)'
 # ------------------------------------------------
+
 
 - task: TerraformTask@5
   displayName: "Terraform Apply (only after merge to main)"
@@ -50,3 +53,58 @@ steps:
     command: 'apply'
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
+
+
+# trigger:
+#   branches:
+#     include:
+#       - main         # merge ke baad chalega (apply bhi hoga)
+#       - feature/* 
+
+# pool: agent-ka-pool   # tumhara self-hosted pool
+
+# steps:
+# - task: TerraformInstaller@1
+#   inputs:
+#     terraformVersion: 'latest'
+
+# - task: TerraformTask@5
+#   displayName: 'Init'
+#   inputs:
+#     provider: 'azurerm'
+#     command: 'init'
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+#     backendServiceArm: 'servocon'
+#     backendAzureRmStorageAccountName: 'strgaccyaml'
+#     backendAzureRmContainerName: 'cntryaml'
+#     backendAzureRmKey: 'new.tfstate'
+
+# - task: TerraformTask@5
+#   displayName: 'Plan'
+#   inputs:
+#     provider: 'azurerm'
+#     command: 'plan'
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+#     environmentServiceNameAzureRM: 'servocon'
+
+
+## ---------------- tfsec steps ----------------
+# - powershell: |
+#     Write-Host "Downloading tfsec binary..."
+#     Invoke-WebRequest -Uri https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-windows-amd64.exe -OutFile $(Build.SourcesDirectory)\tfsec.exe
+#   displayName: 'Download tfsec'
+
+# - powershell: |
+#     Write-Host "Running tfsec scan..."
+#     $(Build.SourcesDirectory)\tfsec.exe $(System.DefaultWorkingDirectory)/module
+#   displayName: 'Run Security Scan (tfsec)'
+## ------------------------------------------------
+
+# - task: TerraformTask@5
+#   displayName: "Terraform Apply (only after merge to main)"
+#   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+#   inputs:
+#     provider: 'azurerm'
+#     command: 'apply'
+#     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+#     environmentServiceNameAzureRM: 'servocon'
