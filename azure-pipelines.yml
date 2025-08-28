@@ -2,17 +2,17 @@ trigger:
   branches:
     include:
       - main         # merge ke baad chalega (apply bhi hoga)
-      - feature/*
+      - feature/* 
 
-pool: agent-ka-pool
+pool: agent-ka-pool   # tumhara self hosted agent
 
 steps:
-# 1️⃣ Install Terraform
+# Install Terraform
 - task: TerraformInstaller@1
   inputs:
     terraformVersion: 'latest'
 
-# 2️⃣ Terraform Init
+# Terraform Init
 - task: TerraformTask@5
   displayName: 'Init'
   inputs:
@@ -24,7 +24,7 @@ steps:
     backendAzureRmContainerName: 'cntryaml'
     backendAzureRmKey: 'new.tfstate'
 
-# 3️⃣ Terraform Plan
+# Terraform Plan
 - task: TerraformTask@5
   displayName: 'Plan'
   inputs:
@@ -33,30 +33,17 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
 
-# 4️⃣ Install Python + Checkov (only if not installed on agent)
+# Install tfsec (via Chocolatey)
 - powershell: |
-    Write-Host "Installing Python & Checkov..."
-    if (-not (Get-Command python -ErrorAction SilentlyContinue)) {
-        Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe -OutFile python-installer.exe
-        Start-Process python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_pip=1' -Wait
-    }
-    python --version
-    pip install --upgrade pip
-    pip install checkov
-  displayName: 'Install Python & Checkov'
+    choco install tfsec -y
+  displayName: 'Install tfsec'
 
-# 5️⃣ Run Checkov Scan
-- script: |
-    checkov -d $(System.DefaultWorkingDirectory)/module --quiet --compact
-  displayName: 'Run Security Scan (Checkov)'
+# Run Security Scan with tfsec
+- powershell: |
+    tfsec $(System.DefaultWorkingDirectory)/module
+  displayName: 'Run Security Scan (tfsec)'
 
-# (Optional) 👉 Agar tum tfsec use karna chahte ho
-# - powershell: |
-#     choco install tfsec -y
-#     tfsec $(System.DefaultWorkingDirectory)/module
-#   displayName: 'Run Security Scan (tfsec)'
-
-# 6️⃣ Terraform Apply (only on main)
+# Terraform Apply (only after merge to main)
 - task: TerraformTask@5
   displayName: "Terraform Apply (only after merge to main)"
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
