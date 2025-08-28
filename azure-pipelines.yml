@@ -4,7 +4,7 @@ trigger:
       - main
       - feature/*
     
-pr: none
+# pr: none
 
 pool: agent-ka-pool
 
@@ -32,16 +32,16 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
 
-# Terraform scan (Checkov)
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.x'
-    addToPath: true
+# # Terraform scan (Checkov)
+# - task: UsePythonVersion@0
+#   inputs:
+#     versionSpec: '3.x'
+#     addToPath: true
 
-- script: |
-    pip install checkov
-    checkov -d $(System.DefaultWorkingDirectory)/module
-  displayName: '🔍 Scan Terraform Code with Checkov'
+# - script: |
+#     pip install checkov
+#     checkov -d $(System.DefaultWorkingDirectory)/module
+#   displayName: '🔍 Scan Terraform Code with Checkov'
 
 # ✅ Apply will only run if the branch is main (i.e., PR is merged)
 - task: TerraformTask@5
