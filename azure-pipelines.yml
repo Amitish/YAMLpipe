@@ -1,7 +1,7 @@
 trigger:
   branches:
     include:
-      - main         # merge ke baad chalega (apply bhi hoga)
+      - main
       - feature/* 
 
 pool: agent-ka-pool   # tumhara self-hosted pool
@@ -31,18 +31,16 @@ steps:
     environmentServiceNameAzureRM: 'servocon'
 
 
-# ---------------- Trivy steps ----------------
-- powershell: |
-    Write-Host "Downloading Trivy binary..."
-    Invoke-WebRequest -Uri https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.54.0_Windows-64bit.zip -OutFile $(Build.SourcesDirectory)\trivy.zip
-    Expand-Archive -Path $(Build.SourcesDirectory)\trivy.zip -DestinationPath $(Build.SourcesDirectory)\trivy
-  displayName: 'Download Trivy'
+- task: trivy@2
+  displayName: "Trivy IaC (Filesystem) Security Scan"
+  inputs:
+    type: 'filesystem'
+    target: '$(System.DefaultWorkingDirectory)/module'
+    scanners: 'vuln,misconfig,secret'
+    severity: 'HIGH,CRITICAL'
+    exitCode: '1'  # agar HIGH ya CRITICAL vulnerabilities dikhe — pipeline fail ho
 
-- powershell: |
-    Write-Host "Running Trivy IaC scan..."
-    $(Build.SourcesDirectory)\trivy\trivy.exe config --severity HIGH,CRITICAL $(System.DefaultWorkingDirectory)/module
-  displayName: 'Run Security Scan (Trivy IaC)'
-# ------------------------------------------------
+
 
 
 - task: TerraformTask@5
@@ -53,6 +51,7 @@ steps:
     command: 'apply'
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
+
 
 
 # trigger:
