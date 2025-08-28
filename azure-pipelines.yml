@@ -1,10 +1,10 @@
 trigger:
   branches:
     include:
-      - main         # merge ke baad chalega (apply bhi hoga)
-      - feature/*    # feature branches pe bhi chalega (sirf plan tak)
+      - main
+      - feature/*
 
-pool: agent-ka-pool
+pool: agent-ka-pool   # Tumhara Windows agent
 
 steps:
 - task: TerraformInstaller@1
@@ -30,14 +30,16 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
 
-# ✅ Install Python (pip included)
-- task: UsePythonVersion@0
-  inputs:
-    versionSpec: '3.x'
-    addToPath: true
+# ✅ Install Python manually on Windows agent
+- powershell: |
+    Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe -OutFile python-installer.exe
+    Start-Process python-installer.exe -ArgumentList "/quiet InstallAllUsers=1 PrependPath=1 Include_pip=1" -Wait
+    python --version
+    pip --version
+  displayName: 'Install Python & pip (Windows)'
 
-# 🔒 Run Security Scan with Checkov
-- script: |
+# 🔒 Run Checkov security scan
+- powershell: |
     pip install checkov
     checkov -d $(System.DefaultWorkingDirectory)/module --quiet --compact
   displayName: 'Run Security Scan (Checkov)'
