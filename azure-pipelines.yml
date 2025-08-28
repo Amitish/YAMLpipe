@@ -30,7 +30,13 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
 
-# 🔒 Security Check with Checkov
+# ✅ Install Python (pip included)
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: '3.x'
+    addToPath: true
+
+# 🔒 Run Security Scan with Checkov
 - script: |
     pip install checkov
     checkov -d $(System.DefaultWorkingDirectory)/module --quiet --compact
