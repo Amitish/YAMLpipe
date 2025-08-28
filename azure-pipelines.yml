@@ -4,15 +4,13 @@ trigger:
       - main         # merge ke baad chalega (apply bhi hoga)
       - feature/* 
 
-pool: agent-ka-pool   # tumhara self hosted agent
+pool: agent-ka-pool   # tumhara self-hosted pool
 
 steps:
-# Install Terraform
 - task: TerraformInstaller@1
   inputs:
     terraformVersion: 'latest'
 
-# Terraform Init
 - task: TerraformTask@5
   displayName: 'Init'
   inputs:
@@ -24,7 +22,6 @@ steps:
     backendAzureRmContainerName: 'cntryaml'
     backendAzureRmKey: 'new.tfstate'
 
-# Terraform Plan
 - task: TerraformTask@5
   displayName: 'Plan'
   inputs:
@@ -33,17 +30,18 @@ steps:
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
 
-# Install tfsec (via Chocolatey)
+# ---------------- tfsec steps ----------------
 - powershell: |
-    choco install tfsec -y
-  displayName: 'Install tfsec'
+    Write-Host "Downloading tfsec binary..."
+    Invoke-WebRequest -Uri https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-windows-amd64.exe -OutFile $(Build.SourcesDirectory)\tfsec.exe
+  displayName: 'Download tfsec'
 
-# Run Security Scan with tfsec
 - powershell: |
-    tfsec $(System.DefaultWorkingDirectory)/module
+    Write-Host "Running tfsec scan..."
+    $(Build.SourcesDirectory)\tfsec.exe $(System.DefaultWorkingDirectory)/module
   displayName: 'Run Security Scan (tfsec)'
+# ------------------------------------------------
 
-# Terraform Apply (only after merge to main)
 - task: TerraformTask@5
   displayName: "Terraform Apply (only after merge to main)"
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
