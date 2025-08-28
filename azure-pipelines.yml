@@ -41,8 +41,6 @@ steps:
     exitCode: '1'  # agar HIGH ya CRITICAL vulnerabilities dikhe — pipeline fail ho
 
 
-
-
 - task: TerraformTask@5
   displayName: "Terraform Apply (only after merge to main)"
   condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
