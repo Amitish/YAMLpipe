@@ -12,6 +12,7 @@ steps:
     terraformVersion: 'latest'
 
 - task: TerraformTask@5
+  displayName: 'Init'
   inputs:
     provider: 'azurerm'
     command: 'init'
@@ -22,6 +23,7 @@ steps:
     backendAzureRmKey: 'new.tfstate'
 
 - task: TerraformTask@5
+  displayName: 'Plan'
   inputs:
     provider: 'azurerm'
     command: 'plan'
