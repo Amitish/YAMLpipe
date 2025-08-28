@@ -1,0 +1,38 @@
+trigger:
+  branches:
+    include:
+      - main         # merge ke baad chalega (apply bhi hoga)
+      - feature/* 
+
+pool: agent-ka-pool
+
+steps:
+- task: TerraformInstaller@1
+  inputs:
+    terraformVersion: 'latest'
+
+- task: TerraformTask@5
+  inputs:
+    provider: 'azurerm'
+    command: 'init'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+    backendServiceArm: 'servocon'
+    backendAzureRmStorageAccountName: 'strgaccyaml'
+    backendAzureRmContainerName: 'cntryaml'
+    backendAzureRmKey: 'new.tfstate'
+
+- task: TerraformTask@5
+  inputs:
+    provider: 'azurerm'
+    command: 'plan'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+    environmentServiceNameAzureRM: 'servocon'
+
+- task: TerraformTask@5
+  displayName: "Terraform Apply (only after merge to main)"
+  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+  inputs:
+    provider: 'azurerm'
+    command: 'apply'
+    workingDirectory: '$(System.DefaultWorkingDirectory)/module'
+    environmentServiceNameAzureRM: 'servocon'
