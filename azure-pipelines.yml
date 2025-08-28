@@ -4,7 +4,7 @@ trigger:
       - main         # merge ke baad chalega (apply bhi hoga)
       - feature/* 
 
-pool: agent-ka-pool
+pool: agent-ka-pool   # tumhara self-hosted pool
 
 steps:
 - task: TerraformInstaller@1
@@ -29,6 +29,18 @@ steps:
     command: 'plan'
     workingDirectory: '$(System.DefaultWorkingDirectory)/module'
     environmentServiceNameAzureRM: 'servocon'
+
+# ---------------- tfsec steps ----------------
+- powershell: |
+    Write-Host "Downloading tfsec binary..."
+    Invoke-WebRequest -Uri https://github.com/aquasecurity/tfsec/releases/latest/download/tfsec-windows-amd64.exe -OutFile $(Build.SourcesDirectory)\tfsec.exe
+  displayName: 'Download tfsec'
+
+- powershell: |
+    Write-Host "Running tfsec scan..."
+    $(Build.SourcesDirectory)\tfsec.exe $(System.DefaultWorkingDirectory)/module
+  displayName: 'Run Security Scan (tfsec)'
+# ------------------------------------------------
 
 - task: TerraformTask@5
   displayName: "Terraform Apply (only after merge to main)"
