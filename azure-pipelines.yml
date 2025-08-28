@@ -4,49 +4,56 @@ trigger:
       - main
       - feature/*
 
-pool: agent-ka-pool  # tumhara Windows agent
+pool:
+  vmImage: 'windows-latest'
 
 steps:
+# 1. Checkout repo
+- checkout: self
+
+# 2. Terraform installer
 - task: TerraformInstaller@1
   inputs:
-    terraformVersion: 'latest'
+    terraformVersion: '1.6.6'
 
-- task: TerraformTask@5
+# 3. Terraform init
+- script: terraform init
   displayName: 'Init'
-  inputs:
-    provider: 'azurerm'
-    command: 'init'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/module'
-    backendServiceArm: 'servocon'
-    backendAzureRmStorageAccountName: 'strgaccyaml'
-    backendAzureRmContainerName: 'cntryaml'
-    backendAzureRmKey: 'new.tfstate'
 
-- task: TerraformTask@5
+# 4. Terraform plan
+- script: terraform plan -out=tfplan
   displayName: 'Plan'
-  inputs:
-    provider: 'azurerm'
-    command: 'plan'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/module'
-    environmentServiceNameAzureRM: 'servocon'
 
-# ✅ Install Python + Checkov manually
+# 5. Install Python & Checkov
 - powershell: |
+    Set-ExecutionPolicy Bypass -Scope Process -Force
+
+    Write-Host "Downloading Python installer..."
     Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe -OutFile python-installer.exe
-    Start-Process python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_pip=1' -Wait
+
+    Write-Host "Installing Python..."
+    Start-Process .\python-installer.exe -ArgumentList '/quiet InstallAllUsers=1 PrependPath=1 Include_test=0 Include_pip=1' -Wait
+
+    # Refresh PATH
+    $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine")
+
+    Write-Host "Checking Python version..."
     python --version
-    pip install checkov
+
+    Write-Host "Upgrading pip..."
+    python -m pip install --upgrade pip
+
+    Write-Host "Installing Checkov..."
+    python -m pip install checkov
   displayName: 'Install Python & Checkov (Windows)'
 
-- script: |
-    checkov -d $(System.DefaultWorkingDirectory)/module --quiet --compact
+# 6. Run Security Scan (Checkov)
+- powershell: |
+    Write-Host "Running Checkov security scan..."
+    checkov -d .
   displayName: 'Run Security Scan (Checkov)'
 
-- task: TerraformTask@5
-  displayName: "Terraform Apply (only after merge to main)"
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  inputs:
-    provider: 'azurerm'
-    command: 'apply'
-    workingDirectory: '$(System.DefaultWorkingDirectory)/module'
-    environmentServiceNameAzureRM: 'servocon'
+# 7. Terraform apply (only on main branch)
+- script: terraform apply -auto-approve tfplan
+  displayName: 'Terraform Apply (only on main branch)'
+  condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
